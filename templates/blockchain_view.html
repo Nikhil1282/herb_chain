@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Blockchain View</title>
+  <style>
+    body { font-family: Arial; }
+    .block {
+      border: 1px solid #333;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Blockchain Ledger</h1>
+
+  {% for block in blocks %}
+  <div class="block">
+    <strong>Block #{{ block.index }}</strong><br>
+    <b>Timestamp:</b> {{ block.timestamp }}<br>
+    <b>Data:</b> {{ block.data }}<br>
+    <b>Hash:</b> {{ block.hash }}<br>
+    <b>Prev Hash:</b> {{ block.prev_hash }}<br>
+  </div>
+  {% endfor %}
+
+  <a href="{{ url_for('index') }}">⬅ Back to Home</a>
+</body>
+</html>

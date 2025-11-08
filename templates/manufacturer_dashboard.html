@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manufacturer Dashboard</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #eef6ed;
+            padding: 30px;
+            color: #2e7d32;
+            margin: 0;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        table {
+            width: 95%;
+            margin: auto;
+            border-collapse: separate;
+            border-spacing: 0 15px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 18px 20px;
+            text-align: center;
+            vertical-align: middle;
+            color: #356635;
+        }
+        th {
+            background: #2e7d32;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        tr {
+            background: #f9fff6;
+            transition: background-color 0.3s ease;
+        }
+        tr:hover td {
+            background-color: #d9f0cb;
+            cursor: pointer;
+        }
+        td {
+            border-radius: 12px;
+            box-shadow: inset 0 -5px 10px -7px #97be69;
+        }
+        td a {
+            text-decoration: none;
+            color: #2e7d32;
+            font-weight: 600;
+            background: #ccf1b3;
+            padding: 8px 14px;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(80,160,40,0.3);
+            transition: background-color 0.25s ease;
+        }
+        td a:hover {
+            background-color: #a5d05a;
+            color: white;
+        }
+        .empty-msg {
+            font-size: 20px;
+            color: #556b2f;
+            text-align: center;
+            margin-top: 70px;
+            font-style: italic;
+        }
+        @media (max-width: 700px) {
+            body, table {
+                width: 100%;
+                padding: 15px;
+            }
+            th, td {
+                font-size: 14px;
+                padding: 12px 8px;
+            }
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <p style="text-align: center; margin-bottom: 20px;">
+  <a href="{{ url_for('home') }}" style="color: #2e7d32; font-weight: 600; text-decoration: none; border: 2px solid #2e7d32; padding: 8px 16px; border-radius: 8px; transition: background-color 0.3s;">
+    ← Back to Home
+  </a>
+</p>
+
+    <h2>🏭 Manufacturer Dashboard - Pending Tickets</h2>
+
+    {% if tickets %}
+    <table>
+        <thead>
+            <tr>
+                <th>Lab Ticket ID</th>
+                <th>Farmer Name</th>
+                <th>Herb Name</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr onclick='window.location="{{ url_for("manufacturer_ticket_view", ticket_id=ticket.ticket_id) }}";'>
+
+
+
+
+
+                <td>{{ ticket.ticket_id }}</td>
+                <td>{{ ticket.farmer.name if ticket.farmer else 'N/A' }}</td>
+                <td>{{ ticket.herb.herb_name if ticket.herb else 'N/A' }}</td>
+                <td>{% if ticket.manufacturer_finalized %}Finalized{% else %}Awaiting Manufacturing{% endif %}</td>
+                <td>
+                    <a href="{{ url_for('manufacturer_ticket_view', ticket_id=ticket.ticket_id) }}">
+                        {% if ticket.manufacturer_finalized %}View{% else %}Process{% endif %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-msg">No Tickets available for manufacturing at the moment.</p>
+    {% endif %}
+</body>
+</html>
