@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Ticket {{ ticket.ticket_id }}</title>
+    <style>
+        body { font-family: 'Poppins', sans-serif; padding: 30px; background: #eef6ed; }
+        .container { background: #fff; padding: 20px; border-radius: 12px; width: 600px; margin: auto; }
+        label { font-weight: 600; display: block; margin-top: 10px; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 4px; border-radius: 6px; border: 1px solid #ccc; }
+        button { margin-top: 20px; width: 100%; background: #2e7d32; color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
+        a { color: #2e7d32; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🧪 Lab Ticket: {{ ticket.ticket_id }}</h2>
+
+        {% if ticket.herb %}
+        <h3>Farmer & Herb Details</h3>
+        <p><strong>Farmer:</strong> {{ ticket.farmer.name }} | Phone: {{ ticket.farmer.phone }}</p>
+        <p><strong>Herb Name:</strong> {{ ticket.herb.herb_name }}</p>
+        <p><strong>Growth Month:</strong> {{ ticket.herb.growth_month }}</p>
+        <p><strong>Fertilizer Used:</strong> {{ 'Yes' if ticket.herb.fertilizer_used else 'No' }}</p>
+        {% if ticket.herb.fertilizer_used %}
+        <p><strong>Fertilizer Details:</strong> {{ ticket.herb.fertilizer_details }}</p>
+        {% endif %}
+        <p><strong>Harvesting Method:</strong> {{ ticket.herb.harvesting_method }}</p>
+        <p>
+            <strong>Herb Location:</strong> {{ ticket.herb.location }}
+            {% if ticket.herb.latitude and ticket.herb.longitude %}
+            - <a href="https://www.google.com/maps/search/?api=1&query={{ ticket.herb.latitude }},{{ ticket.herb.longitude }}" target="_blank">View on Map</a>
+            {% endif %}
+        </p>
+        {% else %}
+        <p><strong>No herb assigned for this ticket yet.</strong></p>
+        {% endif %}
+
+        <hr>
+
+        <h3>Submit Lab Report</h3>
+        <form method="POST" id="lab-form">
+            <label>Lab Name:</label>
+            <input type="text" name="lab_name" required>
+
+            <label>Lab Location:</label>
+            <input type="text" name="lab_location" id="lab_location" readonly required>
+
+            <!-- Hidden latitude/longitude for map link generation -->
+            <input type="hidden" name="lab_latitude" id="lab_latitude">
+            <input type="hidden" name="lab_longitude" id="lab_longitude">
+
+            <div id="test-container">
+                <label>Test Report Details:</label>
+                <textarea name="lab_report[]" required></textarea>
+            </div>
+
+            <button type="button" onclick="addTest()">+ Add Another Test</button>
+            <button type="submit">Submit Lab Report</button>
+        </form>
+    </div>
+
+    <script>
+        // Function to add more test reports
+        function addTest() {
+            const container = document.getElementById('test-container');
+            const textarea = document.createElement('textarea');
+            textarea.name = 'lab_report[]';
+            textarea.placeholder = 'Enter test details...';
+            textarea.required = true;
+            textarea.style.marginTop = '10px';
+            container.appendChild(textarea);
+        }
+
+        // Auto-fill lab location using browser geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                document.getElementById('lab_latitude').value = lat;
+                document.getElementById('lab_longitude').value = lon;
+
+                // Optional: convert lat/lon to approximate address using reverse geocoding
+                document.getElementById('lab_location').value = `Latitude: ${lat}, Longitude: ${lon}`;
+            }, function(error) {
+                console.warn("Could not get location: ", error);
+            });
+        }
+    </script>
+</body>
+</html>

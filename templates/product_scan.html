@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Traceability - {{ ticket.ticket_id }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9f9f9;
+            color: #333;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        h1, h2, h3 {
+            color: #2e7d32;
+        }
+        section {
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #c2d8a6;
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .download-btn {
+            background-color: #2e7d32;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .download-btn:hover {
+            background-color: #196619;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product Traceability</h1>
+    <h2>Ticket ID: {{ ticket.ticket_id }}</h2>
+
+    <section>
+        <h3>Herb Details</h3>
+        <p><strong>Name:</strong> {{ qr_data.herb_name or 'N/A' }}</p>
+    </section>
+
+    <section>
+        <h3>Farmer Lab Report</h3>
+        {% if qr_data.farmer_report %}
+        <ul>
+            {% for item in qr_data.farmer_report %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No farmer report available.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h3>Manufacturer Report</h3>
+        {% if qr_data.manufacturer_report %}
+            <p style="white-space: pre-wrap;">{{ qr_data.manufacturer_report }}</p>
+        {% else %}
+            <p>No manufacturer report available.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h3>Final Product Information</h3>
+        <p style="white-space: pre-wrap;">{{ qr_data.final_product or "Not available" }}</p>
+    </section>
+
+    <button class="download-btn" id="downloadPdfBtn">Download as PDF</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let y = 10;
+    const lineHeight = 10;
+    const margin = 10;
+
+    doc.setFontSize(16);
+    doc.text("Product Traceability Report", margin, y);
+    y += lineHeight * 2;
+
+    doc.setFontSize(12);
+    function addTextLines(title, text) {
+      doc.setFont(undefined, "bold");
+      doc.text(title, margin, y);
+      y += lineHeight;
+      doc.setFont(undefined, "normal");
+      if (Array.isArray(text)) {
+        text.forEach(item => {
+          if (y > 280) { doc.addPage(); y = margin + lineHeight; }
+          doc.text("- " + item, margin + 5, y);
+          y += lineHeight;
+        });
+      } else {
+        const splitText = doc.splitTextToSize(text || "Not available", 190);
+        splitText.forEach(line => {
+          if (y > 280) { doc.addPage(); y = margin + lineHeight; }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+      }
+      y += lineHeight;
+    }
+
+    // Assign variables as JSON strings, then parse them in JS to proper types
+    const farmerReportJson = '{{ qr_data.farmer_report|tojson|safe }}';
+    const manufacturerReportJson = '{{ (qr_data.manufacturer_report or "No manufacturer report")|tojson|safe }}';
+    const finalProductJson = '{{ (qr_data.final_product or "Not available")|tojson|safe }}';
+
+    let farmerReport = [];
+    try { farmerReport = JSON.parse(farmerReportJson); } catch (e) { farmerReport = []; }
+    let manufacturerReport = "";
+    try { manufacturerReport = JSON.parse(manufacturerReportJson); } catch (e) { manufacturerReport = manufacturerReportJson; }
+    let finalProduct = "";
+    try { finalProduct = JSON.parse(finalProductJson); } catch (e) { finalProduct = finalProductJson; }
+
+    addTextLines("Ticket ID:", "{{ ticket.ticket_id }}");
+    addTextLines("Herb Name:", "{{ qr_data.herb_name or 'N/A' }}");
+    addTextLines("Farmer Lab Report:", farmerReport);
+    addTextLines("Manufacturer Report:", manufacturerReport);
+    addTextLines("Final Product Info:", finalProduct);
+
+    doc.save("ProductTraceability_{{ ticket.ticket_id }}.pdf");
+  });
+</script>
+
+
+
+</body>
+</html>

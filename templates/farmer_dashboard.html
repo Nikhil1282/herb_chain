@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Farmer Dashboard</title>
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #eef6ed; padding: 30px; }
+        form, table { background: #fff; padding: 20px; border-radius: 12px; margin: auto; width: 600px; margin-bottom: 30px; }
+        h2 { text-align: center; color: #2e7d32; }
+        label { display: block; margin-top: 10px; font-weight: 600; }
+        input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; border-radius: 6px; border: 1px solid #ccc; }
+        button { margin-top: 20px; width: 100%; background: #2e7d32; color: white; padding: 10px; border: none; border-radius: 6px; }
+        #fertilizer_details_box { display: none; }
+        .success-box { background: #e8f5e9; border-left: 5px solid #43a047; padding: 12px; margin-bottom: 20px; border-radius: 6px; color: #2e7d32; font-weight: 500; }
+        a.download-link { font-weight: 600; color: #2e7d32; text-decoration: none; margin-top: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <p style="text-align: center; margin-bottom: 20px;">
+  <a href="{{ url_for('home') }}" style="color: #2e7d32; font-weight: 600; text-decoration: none; border: 2px solid #2e7d32; padding: 8px 16px; border-radius: 8px; transition: background-color 0.3s;">
+    ← Back to Home
+  </a>
+</p>
+
+    <h2>🌿 Welcome {{ farmer.name }}</h2>
+
+    <form method="POST">
+        <label>Herb Name:</label>
+        <input type="text" name="herb_name" required>
+
+        <label>Growth Month:</label>
+        <select name="growth_month" required>
+            <option value="">Select Month</option>
+            {% for month in ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
+            <option value="{{ month }}">{{ month }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Fertilizer Used?</label>
+        <input type="radio" name="fertilizer_used" value="yes" onchange="toggleFertilizerBox()"> Yes
+        <input type="radio" name="fertilizer_used" value="no" onchange="toggleFertilizerBox()"> No
+
+        <div id="fertilizer_details_box">
+            <label>Fertilizer Details:</label>
+            <input type="text" name="fertilizer_details">
+        </div>
+
+        <label>Harvesting Method:</label>
+        <textarea name="harvesting_method" required></textarea>
+
+        <label>Location:</label>
+        <input type="text" id="location" name="location" required>
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+
+        <button type="submit">Add Herb</button>
+    </form>
+
+    <h2>Your Herbs & Tickets</h2>
+    <table>
+        <tr>
+            <th>Herb Name</th>
+            <th>Growth Month</th>
+            <th>Lab Ticket ID</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        {% for herb in herbs %}
+        <tr>
+            <td>{{ herb.herb_name }}</td>
+            <td>{{ herb.growth_month }}</td>
+            {% if herb.lab_ticket %}
+            <td>{{ herb.lab_ticket.ticket_id }}</td>
+            <td>{{ herb.lab_ticket.status }}</td>
+            
+            {% else %}
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            {% endif %}
+        </tr>
+        {% if herb.lab_ticket and herb.lab_ticket.status == "Reviewed" and herb.lab_ticket.farmer_report_decoded %}
+        <tr>
+            <td colspan="5" style="background:#e8f5e9; color:#2e7d32; font-weight:600;">
+                🧪 Lab Report Summary:
+            </td>
+        </tr>
+        <tr>
+            <td colspan="5" style="background:#f2f7f2;">
+                <ul>
+                    {% for report in herb.lab_ticket.farmer_report_decoded %}
+                    <li>{{ report }}</li>
+                    {% endfor %}
+                </ul>
+                <a class="download-link" href="{{ url_for('download_report', ticket_id=herb.lab_ticket.ticket_id) }}">
+                    ⬇️ Download Lab Report
+                </a>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+
+    <script>
+        function toggleFertilizerBox() {
+            const yes = document.querySelector('input[value="yes"]').checked;
+            document.getElementById('fertilizer_details_box').style.display = yes ? 'block' : 'none';
+        }
+
+        // Geolocation
+        window.onload = function() {
+            const latInput = document.getElementById('latitude');
+            const lonInput = document.getElementById('longitude');
+            const locInput = document.getElementById('location');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        latInput.value = lat;
+                        lonInput.value = lon;
+
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                locInput.value = data.display_name || `${lat}, ${lon}`;
+                            })
+                            .catch(() => locInput.value = `${lat}, ${lon}`);
+                    },
+                    function(error) {
+                        latInput.value = "";
+                        lonInput.value = "";
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        };
+    </script>
+</body>
+</html>

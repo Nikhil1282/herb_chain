@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>🎤 Voice Registration | Farmer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      text-align: center;
+      padding: 50px;
+    }
+    h2 {
+      color: #2c3e50;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #27ae60;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2ecc71;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎤 किसान पंजीकरण (Voice Registration)</h2>
+  <button onclick="startVoiceRegister()">आवाज़ से पंजीकरण शुरू करें</button>
+  <p id="status"></p>
+
+  <script>
+    const synth = window.speechSynthesis;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'hi-IN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    let farmerData = { name: '', phone: '', password: '' };
+    let step = 0;
+
+    function speak(text, callback = null) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'hi-IN';
+      synth.speak(utter);
+      utter.onend = () => {
+        if (callback) callback();
+      };
+    }
+
+    function listen() {
+      recognition.start();
+      document.getElementById('status').innerText = "🎙️ सुन रहे हैं...";
+    }
+
+    recognition.onresult = (event) => {
+      const result = event.results[0][0].transcript.trim();
+      document.getElementById('status').innerText = "✅ आपने कहा: " + result;
+
+      if (step === 0) {
+        farmerData.name = result;
+        step++;
+        speak("कृपया अपना मोबाइल नंबर बताइए।", listen);
+      } 
+      else if (step === 1) {
+        // remove non-digits
+        farmerData.phone = result.replace(/\D/g, '');
+        step++;
+        speak("अब अपना पासवर्ड बोलिए।", listen);
+      } 
+      else if (step === 2) {
+        farmerData.password = result;
+        step++;
+        speak("धन्यवाद, आपका पंजीकरण किया जा रहा है...");
+
+        fetch('/register_farmer', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: `name=${encodeURIComponent(farmerData.name)}&phone=${encodeURIComponent(farmerData.phone)}&password=${encodeURIComponent(farmerData.password)}`
+        })
+        .then(response => {
+          if (response.redirected) {
+            window.location.href = response.url;
+          } else {
+            document.getElementById('status').innerText = "✅ Registration complete!";
+          }
+        })
+        .catch(err => {
+          document.getElementById('status').innerText = "❌ Error: " + err.message;
+        });
+      }
+    };
+
+    recognition.onerror = (event) => {
+      document.getElementById('status').innerText = "⚠️ Error: " + event.error;
+    };
+
+    function startVoiceRegister() {
+      step = 0;
+      farmerData = { name: '', phone: '', password: '' };
+      speak("अपना नाम बताइए।", listen);
+    }
+  </script>
+</body>
+</html>

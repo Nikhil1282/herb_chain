@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Dashboard</title>
+    <style>
+        body { font-family: 'Poppins', sans-serif; padding: 30px; background: #f4f4f4; }
+        table { width: 90%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background: #2e7d32; color: white; }
+        a { text-decoration: none; color: #2e7d32; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <p style="text-align: center; margin-bottom: 20px;">
+  <a href="{{ url_for('home') }}" style="color: #2e7d32; font-weight: 600; text-decoration: none; border: 2px solid #2e7d32; padding: 8px 16px; border-radius: 8px; transition: background-color 0.3s;">
+    ← Back to Home
+  </a>
+</p>
+
+    <h2 style="text-align:center;">🧪 Lab Dashboard - Pending Tickets</h2>
+    <table>
+        <tr>
+            <th>Ticket ID</th>
+            <th>Farmer</th>
+            <th>Herb Name</th>
+            <th>Growth Month</th>
+            <th>Herb Location</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        {% for ticket in tickets %}
+        <tr>
+            <td>{{ ticket.ticket_id }}</td>
+            <td>{{ ticket.farmer.name }}</td>
+            <td>{{ ticket.herb.herb_name }}</td>
+            <td>{{ ticket.herb.growth_month }}</td>
+            <td>
+                {% if ticket.herb.latitude and ticket.herb.longitude %}
+                <a href="https://www.google.com/maps/search/?api=1&query={{ ticket.herb.latitude }},{{ ticket.herb.longitude }}" target="_blank">View Map</a>
+                {% else %}
+                N/A
+                {% endif %}
+            </td>
+            <td>{{ ticket.status }}</td>
+            <td><a href="{{ url_for('lab_ticket_view', ticket_id=ticket.ticket_id) }}">View & Submit Report</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
